@@ -1,8 +1,6 @@
-# Autodrums
-
 <img alt="autodrums" width="250" src="img/keybindings.png">
 
-When Autodrums is started, it immediately starts playing non-repeating drum beats.
+Play non-repeating drum beats.
 
 ## Requirements
 
