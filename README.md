@@ -13,10 +13,10 @@ Play non-repeating drum beats.
 
 ## Test
 
-* Tested on Arch Linux.
+* Tested on Arch Linux and macOS.
 
 ## General info
 
 * Version: 1.0.0
 * Author: Alexander F. Rødseth &lt;rodseth@gmail.com&gt;
-* License: MIT
+* License: BSD-3
