@@ -34,3 +34,4 @@
 *.zip
 autodrums
 musicradar-drum-samples
+.DS_Store
