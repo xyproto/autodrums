@@ -7,6 +7,7 @@
 #include <iterator>
 #include <random>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -213,7 +214,7 @@ int main(int argc, char** argv)
     atexit(SDL_Quit);
 
     SDL_Window* win = SDL_CreateWindow("Autodrums", SDL_WINDOWPOS_UNDEFINED,
-        SDL_WINDOWPOS_UNDEFINED, 1027, 768, SDL_WINDOW_SHOWN);
+        SDL_WINDOWPOS_UNDEFINED, 256, 192, SDL_WINDOW_SHOWN);
     if (win == nullptr) {
         std::cerr << "SDL_CreateWindow Error: " << SDL_GetError() << std::endl;
         return EXIT_FAILURE;
@@ -284,7 +285,7 @@ int main(int argc, char** argv)
     double bpm = 500.0; // TODO: this is not beats per minute, fix it
 
     // The initial drum pattern
-    const auto kPat = "k   k   kk  k   "s; // k for kick
+    const auto kPat = "k   k   Kk  k   "s; // k for kick, K for double kick
     const auto sPat = "  s           s "s; // s for snare
     const auto hPat = " h h hhh  hh h h"s; // h for hihat
     const auto cPat = "        c       "s; // c for crash
@@ -440,7 +441,7 @@ int main(int argc, char** argv)
 
             now = std::chrono::steady_clock::now();
 
-            auto r1 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); // random number [0,1)
+            auto r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // random number [0,1)
             bool silenceBeat = useRandomBeatSilence && (r1 < randomChanceBeatSilence);
 
             auto nsDuration = std::chrono::duration_cast<std::chrono::microseconds>(now - soundTime).count();
@@ -451,7 +452,7 @@ int main(int argc, char** argv)
 
                 if (!silenceBeat) {
 
-                    auto r2 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); // random number [0,1)
+                    auto r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // random number [0,1)
                     bool skipBeat = useRandomBeatSkip && (r2 < randomChanceBeatSkip);
                     if (skipBeat) {
                         beatCounter++;
@@ -460,7 +461,7 @@ int main(int argc, char** argv)
                         }
                     }
 
-                    auto r3 = static_cast <float> (rand()) / static_cast <float> (RAND_MAX); // random number [0,1)
+                    auto r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // random number [0,1)
                     bool newSamplesNow = (r3 < randomChanceNewSamples);
                     if (useRandomSamples && newSamplesNow) {
                         currentKick = *select_randomly(kicks.begin(), kicks.end());
@@ -477,6 +478,30 @@ int main(int argc, char** argv)
                         Mix_Volume(freeChannel, 128);
                         Mix_PlayChannel(freeChannel, samples[currentKick], 0);
                     }
+
+                    if (kPat.at(beatCounter) == 'K') {
+                        freeChannel = Mix_GroupAvailable(-1);
+                        Mix_Volume(freeChannel, 128);
+                        Mix_PlayChannel(freeChannel, samples[currentKick], 0);
+
+                       // Create a new thread
+                        std::thread t([samples, currentKick]() {
+                            // This lambda function will run in a new thread
+                            // Sleep for 100 ms
+                            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                            int freeChannel2 = Mix_GroupAvailable(-1);
+                            Mix_Volume(freeChannel2, 128);
+                            Mix_PlayChannel(freeChannel2, samples[currentKick], 0);
+                        });
+                        // Detach the thread so that it can run independently from the main thread
+                        t.detach();
+
+                        //int freeChannel2 = Mix_GroupAvailable(-1);
+                        //Mix_Volume(freeChannel2, 128);
+                        //Mix_PlayChannel(freeChannel2, samples[currentKick], 0);
+
+                    }
+
                     if (sPat.at(beatCounter) == 's') {
                         freeChannel = Mix_GroupAvailable(-1);
                         Mix_Volume(freeChannel, 128);
