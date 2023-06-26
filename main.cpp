@@ -2,6 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
@@ -229,7 +230,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    SDL_Surface* bmp = SDL_LoadBMP("img/keybindings.bmp");
+    SDL_Surface* bmp = SDL_LoadBMP("img/autodrums.bmp");
     if (bmp == nullptr) {
         std::cerr << "SDL_LoadBMP Error: " << SDL_GetError() << std::endl;
         if (ren != nullptr) {
