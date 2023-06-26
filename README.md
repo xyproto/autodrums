@@ -1,5 +1,7 @@
 <img alt="autodrums" width="250" src="img/keybindings.png">
 
+A randomized drum machine.
+
 Play non-repeating drum beats.
 
 ## Requirements
@@ -14,6 +16,10 @@ Play non-repeating drum beats.
 ## Test
 
 * Tested on Arch Linux and macOS.
+
+## Keybindings
+
+See `main.cpp` for keybindings.
 
 ## General info
 
