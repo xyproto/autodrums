@@ -297,6 +297,7 @@ int main(int argc, char** argv)
     bool useRandomBeatSkip = true; // randomize the beat by skipping ahead?
     bool useRandomBeatSilence = true; // randomize the beat by silencing some beats?
     bool useRandomSamples = true; // randomize the samples?
+    bool lockSamples = false; // lock the current samples so that they are not randomized?
 
     double randomChanceBeatSkip = 0.6; // 60% chance of skipping a beat so that everything shifts
     double randomChanceBeatSilence = 0.005; // 0.5% chance of silencing a beat
@@ -418,8 +419,8 @@ int main(int argc, char** argv)
                 case SDLK_ESCAPE: // quit
                     done = true;
                     break;
-                case SDLK_SPACE: // quickly fade out all channels
-                    Mix_FadeOutChannel(-1, 200);
+                case SDLK_SPACE: // lock samples, don't change them with random samples
+                    lockSamples = !lockSamples;
                     break;
                 default:
                     break;
@@ -464,7 +465,7 @@ int main(int argc, char** argv)
 
                     auto r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // random number [0,1)
                     bool newSamplesNow = (r3 < randomChanceNewSamples);
-                    if (useRandomSamples && newSamplesNow) {
+                    if (useRandomSamples && newSamplesNow && !lockSamples) {
                         currentKick = *select_randomly(kicks.begin(), kicks.end());
                         currentSnare = *select_randomly(snares.begin(), snares.end());
                         currentHiHat = *select_randomly(hihats.begin(), hihats.end());
@@ -485,7 +486,7 @@ int main(int argc, char** argv)
                         Mix_Volume(freeChannel, 128);
                         Mix_PlayChannel(freeChannel, samples[currentKick], 0);
 
-                       // Create a new thread
+                        // Create a new thread
                         std::thread t([samples, currentKick]() {
                             // This lambda function will run in a new thread
                             // Sleep for 100 ms
@@ -497,10 +498,9 @@ int main(int argc, char** argv)
                         // Detach the thread so that it can run independently from the main thread
                         t.detach();
 
-                        //int freeChannel2 = Mix_GroupAvailable(-1);
-                        //Mix_Volume(freeChannel2, 128);
-                        //Mix_PlayChannel(freeChannel2, samples[currentKick], 0);
-
+                        // int freeChannel2 = Mix_GroupAvailable(-1);
+                        // Mix_Volume(freeChannel2, 128);
+                        // Mix_PlayChannel(freeChannel2, samples[currentKick], 0);
                     }
 
                     if (sPat.at(beatCounter) == 's') {
