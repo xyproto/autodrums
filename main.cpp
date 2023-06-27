@@ -398,11 +398,11 @@ int main(int argc, char** argv)
                     break;
                 case 'm': // increase the bpm
                     bpm += 10.0;
-                    std::cerr << "bpm " << bpm << std::endl;
+                    //std::cerr << "bpm " << bpm << std::endl;
                     break;
                 case 'n': // decrease the bpm
                     bpm -= 10.0;
-                    std::cerr << "bpm " << bpm << std::endl;
+                    //std::cerr << "bpm " << bpm << std::endl;
                     break;
                 case 'y': // use the current settings, don't change samples
                     beatPlaying = true;
