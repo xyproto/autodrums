@@ -297,7 +297,6 @@ int main(int argc, char** argv)
     bool useRandomBeatSkip = true; // randomize the beat by skipping ahead?
     bool useRandomBeatSilence = true; // randomize the beat by silencing some beats?
     bool useRandomSamples = true; // randomize the samples?
-    bool lockSamples = false; // lock the current samples so that they are not randomized?
 
     double randomChanceBeatSkip = 0.6; // 60% chance of skipping a beat so that everything shifts
     double randomChanceBeatSilence = 0.005; // 0.5% chance of silencing a beat
@@ -398,11 +397,9 @@ int main(int argc, char** argv)
                     break;
                 case 'm': // increase the bpm
                     bpm += 10.0;
-                    //std::cerr << "bpm " << bpm << std::endl;
                     break;
                 case 'n': // decrease the bpm
                     bpm -= 10.0;
-                    //std::cerr << "bpm " << bpm << std::endl;
                     break;
                 case 'y': // use the current settings, don't change samples
                     beatPlaying = true;
@@ -419,8 +416,14 @@ int main(int argc, char** argv)
                 case SDLK_ESCAPE: // quit
                     done = true;
                     break;
-                case SDLK_SPACE: // lock samples, don't change them with random samples
-                    lockSamples = !lockSamples;
+                case SDLK_SPACE: // quickly fade out all channels, and then mute
+                    Mix_FadeOutChannel(-1, 200);
+
+                    // Sleep for 200 ms
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                    beatPlaying = !beatPlaying;
+
                     break;
                 default:
                     break;
@@ -433,8 +436,8 @@ int main(int argc, char** argv)
                 break;
             }
 
-            // I have checked, and this delay gives very close to 120 bpm,
-            // minus the time taken to call the Mix functions (which returns quickly).
+            // This delay value gives close to 120 BPM, minus the time taken
+            // to call the Mix functions (which returns quickly).
             // For beat stability, there should a time adjustment at every loop,
             // or slightly less delay depending on how long calling the functions takes.
 
@@ -465,7 +468,7 @@ int main(int argc, char** argv)
 
                     auto r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX); // random number [0,1)
                     bool newSamplesNow = (r3 < randomChanceNewSamples);
-                    if (useRandomSamples && newSamplesNow && !lockSamples) {
+                    if (useRandomSamples && newSamplesNow) {
                         currentKick = *select_randomly(kicks.begin(), kicks.end());
                         currentSnare = *select_randomly(snares.begin(), snares.end());
                         currentHiHat = *select_randomly(hihats.begin(), hihats.end());
@@ -497,10 +500,6 @@ int main(int argc, char** argv)
                         });
                         // Detach the thread so that it can run independently from the main thread
                         t.detach();
-
-                        // int freeChannel2 = Mix_GroupAvailable(-1);
-                        // Mix_Volume(freeChannel2, 128);
-                        // Mix_PlayChannel(freeChannel2, samples[currentKick], 0);
                     }
 
                     if (sPat.at(beatCounter) == 's') {

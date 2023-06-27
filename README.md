@@ -44,7 +44,7 @@ Tested on Arch Linux and macOS.
 * Press `i` to toggle "random beat skip".
 * Press `j` to toggle "use random beat silence".
 * Press `esc` to quit.
-* Press `space` to lock the current samples.
+* Press `space` to pause.
 
 Note that playing too many sounds at the same time does not always work.
 
