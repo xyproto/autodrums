@@ -328,7 +328,7 @@ int main(int argc, char** argv)
                     Mix_Volume(i, 128);
                     Mix_PlayChannel(i, samples[currentKick], 0);
                     break;
-                case 'p': // special snare
+                case SDLK_RETURN: // snare with delay
                     // TODO: Don't play the sample repeatedly,
                     //       rather prepare the sample in advance.
                     volume = 128;
@@ -392,7 +392,7 @@ int main(int argc, char** argv)
                     currentRide = *select_randomly(rides.begin(), rides.end());
                     currentOpHat = *select_randomly(ophats.begin(), ophats.end());
                     break;
-                case 'k': // play a beat
+                case 'p': // pause toggle
                     beatPlaying = !beatPlaying;
                     break;
                 case 'm': // increase the bpm
@@ -416,14 +416,12 @@ int main(int argc, char** argv)
                 case SDLK_ESCAPE: // quit
                     done = true;
                     break;
-                case SDLK_SPACE: // quickly fade out all channels, and then mute
+                case SDLK_SPACE: // fade-out and then pause toggle
+                    // Fade out for 200 ms
                     Mix_FadeOutChannel(-1, 200);
-
-                    // Sleep for 200 ms
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
+                    // Pause toggle
                     beatPlaying = !beatPlaying;
-
                     break;
                 default:
                     break;
