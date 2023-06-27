@@ -410,10 +410,10 @@ int main(int argc, char** argv)
                     useRandomBeatSilence = true;
                     useRandomSamples = false;
                     break;
-                case 'i':
+                case 'i': // toggle "random beat skip"
                     useRandomBeatSkip = !useRandomBeatSkip;
                     break;
-                case 'j':
+                case 'j': // toggle "use random beat silence"
                     useRandomBeatSilence = !useRandomBeatSilence;
                     break;
                 case SDLK_ESCAPE: // quit
