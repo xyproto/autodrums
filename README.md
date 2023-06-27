@@ -27,8 +27,8 @@ Tested on Arch Linux and macOS.
 ## Keybindings
 
 * Press `r` to randomize the samples.
-* Press `p` to pause.
-* Press `space` to pause, with a 200ms fade-out.
+* Press `p` to pause toggle (try holding it down for an interesting effect).
+* Press `space` to toggle pause, with a 200ms fade-out.
 * Press `esc` to quit.
 
 * Press `a` to play a kick drum sound.
