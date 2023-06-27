@@ -1,4 +1,4 @@
-<img alt="autodrums" width="256" src="imgautodrums.png">
+<img alt="autodrums logo" width="256" src="img/autodrums.png">
 
 A randomized drum machine.
 
