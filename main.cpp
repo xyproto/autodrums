@@ -347,7 +347,7 @@ int main(int argc, char** argv)
                     // usedChannels = nullptr;
                     break;
                 case 'w': // snare
-                case 'r': // snare
+                case 'f': // snare
                     i = Mix_GroupAvailable(-1);
                     Mix_Volume(i, 128);
                     Mix_PlayChannel(i, samples[currentSnare], 0);
@@ -383,7 +383,7 @@ int main(int argc, char** argv)
                               << currentHiHat << " c " << currentCrash << " t " << currentTom
                               << " r " << currentRide << " oh " << currentOpHat << std::endl;
                     break;
-                case 'f': // randomize samples
+                case 'r': // randomize samples
                     currentKick = *select_randomly(kicks.begin(), kicks.end());
                     currentSnare = *select_randomly(snares.begin(), snares.end());
                     currentHiHat = *select_randomly(hihats.begin(), hihats.end());
