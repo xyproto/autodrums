@@ -6,9 +6,9 @@ Play non-repeating drum beats.
 
 This can be used for:
 
-* Create a drum track for twelve tone music intended to be used for modern dance.
-* Generate audio that can be sampled and sliced.
-* Listening to experimental jazz drums for hours on end.
+* Creating a drum track for twelve tone music intended to be used for modern dance.
+* Generating audio that can be sampled and sliced.
+* Listening to experimental jazz drums for hours and hours on end.
 
 ## Requirements
 
