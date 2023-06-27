@@ -18,6 +18,8 @@ using SampleIndex = int;
 
 const int maxChannels = 32;
 
+const auto versionString = "autodrums 1.1.0"s;
+
 // thanks https://stackoverflow.com/a/16421677/131264
 template <typename Iter, typename RandomGenerator>
 Iter select_randomly(Iter start, Iter end, RandomGenerator& g)
@@ -210,6 +212,8 @@ std::vector<Mix_Chunk*> InitAndLoad(std::vector<SampleIndex>& kicks,
 
 int main(int argc, char** argv)
 {
+    std::cout << versionString << std::endl;
+
     // Initialize the SDL library with the Video subsystem
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     atexit(SDL_Quit);

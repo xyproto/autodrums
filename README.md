@@ -55,6 +55,6 @@ Note that playing too many sounds at the same time does not always work.
 
 ## General info
 
-* Version: 1.0.0
+* Version: 1.1.0
 * Author: Alexander F. Rødseth &lt;rodseth@gmail.com&gt;
 * License: BSD-3
