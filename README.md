@@ -12,7 +12,7 @@ This can be used for:
 
 ## Requirements
 
-* SDL2
+* SDL2 (including `sdl2_image` and `sdl2_mixer`)
 * Download and extract [the drum samples](http://cdn.mos.musicradar.com/audio/samples/musicradar-drum-samples.zip), either manually or by using `make run`.
 * g++ that supports C++20.
 * `pkg-config`
