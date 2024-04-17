@@ -51,7 +51,7 @@ Tested on Arch Linux and macOS.
 
 Note that playing too many sounds at the same time does not always work.
 
-* [keydrums](https://github.com/xyproto/keydrums) has a few improvements if the goal is to play drums with the keyboard.
+* [keydrums](https://github.com/xyproto/keydrums) is an alternative if the goal is just to play drums with the keyboard.
 
 ## General info
 
