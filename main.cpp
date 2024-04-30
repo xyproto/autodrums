@@ -75,6 +75,56 @@ inline const std::vector<std::string> findFiles(std::string const& path, std::st
     return collected;
 }
 
+int16_t* generateSawtoothWave(int freq, int sampleRate, int durationMs)
+{
+    const int amplitude = 32767; // Max amplitude for 16-bit audio
+    const int totalSamples = sampleRate * durationMs / 1000;
+    int16_t* wave = new int16_t[totalSamples];
+
+    auto ADSREnvelope = [](int sampleIdx, double totalSamples, double attackPct, double decayPct, double sustainLevel, double releasePct) -> double {
+        double attackEnd = totalSamples * attackPct;
+        double decayEnd = totalSamples * (attackPct + decayPct);
+        double releaseStart = totalSamples * (1.0 - releasePct);
+
+        if (sampleIdx < attackEnd) {
+            return sampleIdx / attackEnd;
+        } else if (sampleIdx < decayEnd) {
+            return 1.0 + (sustainLevel - 1.0) * (sampleIdx - attackEnd) / (decayEnd - attackEnd);
+        } else if (sampleIdx < releaseStart) {
+            return sustainLevel;
+        } else if (sampleIdx < totalSamples) {
+            return sustainLevel * (1.0 - (sampleIdx - releaseStart) / (totalSamples - releaseStart));
+        }
+        return 0.0;
+    };
+
+    for (int i = 0; i < totalSamples; ++i) {
+        double envelope = ADSREnvelope(i, totalSamples, 0.05, 0.2, 0.7, 0.05);
+        double sample = envelope * (2.0 * (i % (sampleRate / freq) / (double)(sampleRate / freq) - 0.5));
+        wave[i] = static_cast<int16_t>(amplitude * sample);
+    }
+    return wave;
+}
+
+int16_t* generateKickDrum(int sampleRate, int durationMs)
+{
+    const int amplitude = 32767; // Max amplitude for 16-bit audio
+    const int totalSamples = sampleRate * durationMs / 1000;
+    int16_t* wave = new int16_t[totalSamples];
+    double frequencyStart = 120.0; // Start frequency slightly lowered
+    double frequencyEnd = 60.0; // End frequency for a deeper sound
+    double envelopeStrength = 0.3; // Adjust the decay to be less abrupt
+
+    for (int i = 0; i < totalSamples; ++i) {
+        double time = i / static_cast<double>(sampleRate);
+        double frequency = frequencyStart + (frequencyEnd - frequencyStart) * (i / static_cast<double>(totalSamples)); // Linear pitch decrease
+        double envelope = amplitude * exp(-envelopeStrength * time); // Smooth exponential decay envelope
+        double sample = envelope * sin(2 * M_PI * frequency * time);
+        wave[i] = static_cast<int16_t>(sample);
+    }
+    return wave;
+}
+
 static SampleIndex defaultKick = 0;
 static SampleIndex defaultSnare = 0;
 static SampleIndex defaultHiHat = 0;
@@ -427,6 +477,63 @@ int main(int argc, char** argv)
                     // Pause toggle
                     beatPlaying = !beatPlaying;
                     break;
+                case 'b': // sawtooth sound
+                {
+                    const int freq = 55; // Frequency of the sinus wave (A1 note)
+                    const int sampleRate = 44100;
+                    const int durationMs = 800;
+                    int16_t* waveData = generateSawtoothWave(freq, sampleRate, durationMs);
+
+                    // Calculate the total bytes (16-bit samples)
+                    int byteLength = sampleRate * durationMs / 1000 * sizeof(int16_t);
+
+                    // Load the raw wave data into an SDL_Mixer chunk
+                    Mix_Chunk* waveChunk = Mix_QuickLoad_RAW((Uint8*)waveData, byteLength);
+                    if (!waveChunk) {
+                        std::cerr << "Failed to load enhanced sinus wave" << std::endl;
+                        delete[] waveData;
+                        break;
+                    }
+
+                    // Play the loaded sinus wave
+                    int channel = Mix_PlayChannel(-1, waveChunk, 0);
+                    if (channel == -1) {
+                        std::cerr << "Failed to play enhanced sinus wave" << std::endl;
+                    }
+
+                    // Clean up after the sound is done
+                    SDL_Delay(durationMs);
+                    Mix_FreeChunk(waveChunk);
+                    delete[] waveData;
+                } break;
+
+                case 'v': // play generated kick drum sound
+                {
+                    const int sampleRate = 44100; // Sample rate
+                    const int durationMs = 200; // Short duration for a punchy kick
+                    int16_t* drumData = generateKickDrum(sampleRate, durationMs);
+
+                    // Calculate the total bytes (16-bit samples)
+                    int byteLength = sampleRate * durationMs / 1000 * sizeof(int16_t);
+
+                    // Load the raw wave data into an SDL_Mixer chunk
+                    Mix_Chunk* drumChunk = Mix_QuickLoad_RAW((Uint8*)drumData, byteLength);
+                    if (!drumChunk) {
+                        std::cerr << "Failed to load kick drum sound" << std::endl;
+                        delete[] drumData;
+                        break;
+                    }
+
+                    // Play the loaded kick drum sound
+                    int channel = Mix_PlayChannel(-1, drumChunk, 0);
+                    if (channel == -1) {
+                        std::cerr << "Failed to play kick drum sound" << std::endl;
+                    }
+                    SDL_Delay(durationMs); // Wait for the duration of the sample
+                    Mix_FreeChunk(drumChunk);
+                    delete[] drumData;
+                } break;
+
                 default:
                     break;
                 }
