@@ -3,6 +3,7 @@
 #include <SDL2/SDL_mixer.h>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
@@ -38,12 +39,11 @@ Iter select_randomly(Iter start, Iter end)
     return select_randomly(start, end, gen);
 }
 
+// thanks https://stackoverflow.com/a/874160/131264
 inline bool hasSuffix(std::string const& fullString, std::string const& ending)
 {
-    // thanks https://stackoverflow.com/a/874160/131264
     if (fullString.length() >= ending.length()) {
-        return (0
-            == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+        return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
     }
     return false;
 }
@@ -57,9 +57,8 @@ inline bool contains(std::string const& strHaystack, std::string const& strNeedl
 inline bool iContains(const std::string& strHaystack, const std::string& strNeedle)
 {
     // thanks https://stackoverflow.com/a/19839371/131264
-    auto it
-        = std::search(strHaystack.begin(), strHaystack.end(), strNeedle.begin(), strNeedle.end(),
-            [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+    auto it = std::search(strHaystack.begin(), strHaystack.end(), strNeedle.begin(), strNeedle.end(),
+        [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
     return it != strHaystack.end();
 }
 
@@ -75,32 +74,41 @@ inline const std::vector<std::string> findFiles(std::string const& path, std::st
     return collected;
 }
 
-int16_t* generateSawtoothWave(int freq, int sampleRate, int durationMs)
+static const std::vector<double> bassFrequencies = {
+    16.35, // C0
+    17.32, // C#0/Db0
+    18.35, // D0
+    19.45, // D#0/Eb0
+    20.60, // E0
+    21.83, // F0
+    23.12, // F#0/Gb0
+    24.50, // G0
+    25.96, // G#0/Ab0
+    27.50, // A0
+    29.14, // A#0/Bb0
+    30.87 // B0
+};
+
+int16_t* generateSawtoothWave(double freq, int sampleRate, int durationMs, double cutoffFreq = 500.0)
 {
-    const int amplitude = 32767; // Max amplitude for 16-bit audio
-    const int totalSamples = sampleRate * durationMs / 1000;
-    int16_t* wave = new int16_t[totalSamples];
+    const int amplitude = 32767;
+    const int iTotalSamples = sampleRate * durationMs / 1000;
+    int16_t* wave = new int16_t[iTotalSamples];
+    double rc = 1.0 / (cutoffFreq * 2 * M_PI);
+    double dt = 1.0 / sampleRate;
+    double alpha = dt / (rc + dt);
 
-    auto ADSREnvelope = [](int sampleIdx, double totalSamples, double attackPct, double decayPct, double sustainLevel, double releasePct) -> double {
-        double attackEnd = totalSamples * attackPct;
-        double decayEnd = totalSamples * (attackPct + decayPct);
-        double releaseStart = totalSamples * (1.0 - releasePct);
+    double previous = 0.0; // Previous filtered sample
 
-        if (sampleIdx < attackEnd) {
-            return sampleIdx / attackEnd;
-        } else if (sampleIdx < decayEnd) {
-            return 1.0 + (sustainLevel - 1.0) * (sampleIdx - attackEnd) / (decayEnd - attackEnd);
-        } else if (sampleIdx < releaseStart) {
-            return sustainLevel;
-        } else if (sampleIdx < totalSamples) {
-            return sustainLevel * (1.0 - (sampleIdx - releaseStart) / (totalSamples - releaseStart));
-        }
-        return 0.0;
-    };
+    for (int i = 0; i < iTotalSamples; ++i) {
+        double envelope = 1.0; // Simplified envelope for clarity
+        double sample = envelope * (2.0 * (i % (static_cast<int>(static_cast<double>(sampleRate) / freq)) / static_cast<double>(sampleRate / freq) - 0.5));
 
-    for (int i = 0; i < totalSamples; ++i) {
-        double envelope = ADSREnvelope(i, totalSamples, 0.05, 0.2, 0.7, 0.05);
-        double sample = envelope * (2.0 * (i % (sampleRate / freq) / (double)(sampleRate / freq) - 0.5));
+        // Apply the low-pass filter
+        sample = alpha * sample + (1.0 - alpha) * previous;
+        previous = sample;
+
+        // Scale and convert to 16-bit integer
         wave[i] = static_cast<int16_t>(amplitude * sample);
     }
     return wave;
@@ -477,12 +485,12 @@ int main(int argc, char** argv)
                     // Pause toggle
                     beatPlaying = !beatPlaying;
                     break;
-                case 'b': // sawtooth sound
+                case 'v': // generate a sawtooth sound
                 {
-                    const int freq = 55; // Frequency of the sinus wave (A1 note)
+                    const double freq = *select_randomly(bassFrequencies.begin(), bassFrequencies.end());
                     const int sampleRate = 44100;
-                    const int durationMs = 800;
-                    int16_t* waveData = generateSawtoothWave(freq, sampleRate, durationMs);
+                    const int durationMs = 150;
+                    int16_t* waveData = generateSawtoothWave(freq * 2.0, sampleRate, durationMs);
 
                     // Calculate the total bytes (16-bit samples)
                     int byteLength = sampleRate * durationMs / 1000 * sizeof(int16_t);
@@ -490,7 +498,7 @@ int main(int argc, char** argv)
                     // Load the raw wave data into an SDL_Mixer chunk
                     Mix_Chunk* waveChunk = Mix_QuickLoad_RAW((Uint8*)waveData, byteLength);
                     if (!waveChunk) {
-                        std::cerr << "Failed to load enhanced sinus wave" << std::endl;
+                        std::cerr << "Failed to load sawtooth sample" << std::endl;
                         delete[] waveData;
                         break;
                     }
@@ -498,7 +506,7 @@ int main(int argc, char** argv)
                     // Play the loaded sinus wave
                     int channel = Mix_PlayChannel(-1, waveChunk, 0);
                     if (channel == -1) {
-                        std::cerr << "Failed to play enhanced sinus wave" << std::endl;
+                        std::cerr << "Failed to play sawtooth sample" << std::endl;
                     }
 
                     // Clean up after the sound is done
@@ -507,10 +515,10 @@ int main(int argc, char** argv)
                     delete[] waveData;
                 } break;
 
-                case 'v': // play generated kick drum sound
+                case 'b': // play generated kick drum sound
                 {
-                    const int sampleRate = 44100; // Sample rate
-                    const int durationMs = 200; // Short duration for a punchy kick
+                    const int sampleRate = 44100;
+                    const int durationMs = 200;
                     int16_t* drumData = generateKickDrum(sampleRate, durationMs);
 
                     // Calculate the total bytes (16-bit samples)
@@ -529,7 +537,7 @@ int main(int argc, char** argv)
                     if (channel == -1) {
                         std::cerr << "Failed to play kick drum sound" << std::endl;
                     }
-                    SDL_Delay(durationMs); // Wait for the duration of the sample
+                    SDL_Delay(durationMs);
                     Mix_FreeChunk(drumChunk);
                     delete[] drumData;
                 } break;
